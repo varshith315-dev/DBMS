@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% block title %}Edit Customer{% endblock %}{% block heading %}Edit Customer #{{row.customer_id}}{% endblock %}
+{% block content %}
+<section class="panel narrow"><form method="post">
+<label>Name<input name="customer_name" value="{{row.customer_name or ''}}" required></label>
+<label>Phone<input name="phone" value="{{row.phone or ''}}" required></label>
+<label>Email<input name="email" value="{{row.email or ''}}" type="email"></label>
+<label>Address<textarea name="address">{{row.address or ''}}</textarea></label>
+<div class="buttons"><button class="primary">Save Changes</button><a class="secondary" href="{{url_for('customers')}}">Cancel</a></div>
+</form></section>
+{% endblock %}

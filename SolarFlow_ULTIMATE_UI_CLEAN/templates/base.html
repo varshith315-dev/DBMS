@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}SolarFlow{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+<aside class="sidebar">
+  <div class="brand-block">
+    <div class="brand-orbit"><span>☀</span></div>
+    <div><div class="brand">SolarFlow</div><div class="subtitle">Solar operations platform</div></div>
+  </div>
+  <div class="side-caption">COMMAND CENTER</div>
+  <nav class="side-nav">
+    <div class="nav-label">OVERVIEW</div>
+    <a class="nav-item {% if request.endpoint=='dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}"><span class="nav-icon">⌂</span><span>Dashboard</span></a>
+    <div class="nav-label">CUSTOMER &amp; PLANNING</div>
+    <a class="nav-item {% if request.endpoint=='customers' %}active{% endif %}" href="{{ url_for('customers') }}"><span class="nav-icon">♙</span><span>Customers</span></a>
+    <a class="nav-item {% if request.endpoint=='sites' %}active{% endif %}" href="{{ url_for('sites') }}"><span class="nav-icon">⌖</span><span>Sites</span></a>
+    <a class="nav-item {% if request.endpoint=='surveys' %}active{% endif %}" href="{{ url_for('surveys') }}"><span class="nav-icon">▤</span><span>Surveys</span></a>
+    <a class="nav-item {% if request.endpoint=='designs' %}active{% endif %}" href="{{ url_for('designs') }}"><span class="nav-icon">◇</span><span>Designs</span></a>
+    <div class="nav-label">INSTALLATION &amp; FIELD</div>
+    <a class="nav-item {% if request.endpoint=='installations' %}active{% endif %}" href="{{ url_for('installations') }}"><span class="nav-icon">⚙</span><span>Installations</span></a>
+    <a class="nav-item {% if request.endpoint=='equipment' %}active{% endif %}" href="{{ url_for('equipment') }}"><span class="nav-icon">▣</span><span>Equipment</span></a>
+    <a class="nav-item {% if request.endpoint=='technician_assignments' %}active{% endif %}" href="{{ url_for('technician_assignments') }}"><span class="nav-icon">⚒</span><span>Technician Assignments</span></a>
+    <a class="nav-item {% if request.endpoint=='warranty_service' %}active{% endif %}" href="{{ url_for('warranty_service') }}"><span class="nav-icon">✓</span><span>Warranty &amp; Service</span></a>
+    <div class="nav-label">ENERGY &amp; FINANCE</div>
+    <a class="nav-item {% if request.endpoint=='generation' %}active{% endif %}" href="{{ url_for('generation') }}"><span class="nav-icon">⚡</span><span>Generation</span></a>
+    <a class="nav-item {% if request.endpoint=='billing' %}active{% endif %}" href="{{ url_for('billing') }}"><span class="nav-icon">₹</span><span>Billing</span></a>
+    <a class="nav-item {% if request.endpoint=='reports' %}active{% endif %}" href="{{ url_for('reports') }}"><span class="nav-icon">▥</span><span>Reports</span></a>
+  </nav>
+</aside>
+<main class="main">
+<header class="topbar">
+  <div class="topbar-title"><div class="eyebrow">SOLAR INSTALLATION · MAINTENANCE · ANALYTICS</div><h1>{% block heading %}SolarFlow{% endblock %}</h1></div>
+</header>
+{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<section class="alerts">{% for category,msg in messages %}<div class="alert {{category}}"><span class="alert-dot"></span>{{msg}}</div>{% endfor %}</section>{% endif %}{% endwith %}
+{% block content %}{% endblock %}
+<footer class="app-footer"><span>SolarFlow</span><span>Oracle-powered solar service management</span><span>© 2026</span></footer>
+</main>
+</body></html>

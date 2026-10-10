@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% block title %}Sites{% endblock %}{% block heading %}Site Management{% endblock %}
+{% block content %}
+<div class="grid2">
+<section class="panel">
+<h2>Register Site</h2>
+<form method="post">
+<label>Customer<select name="customer_id" required><option value="">Select customer</option>{% for c in customers %}<option value="{{c.customer_id}}">{{c.customer_name}} (#{{c.customer_id}})</option>{% endfor %}</select></label>
+<label>Site Name<input name="site_name" required></label>
+<label>Site Address<input name="site_address" required></label>
+<label>City<input name="city" required></label>
+<label>Pincode<input name="pincode"></label>
+<label>Roof Area (sq m)<input name="roof_area_sq_m" type="number" step="0.01" min="0.01"></label>
+<button class="primary">Register Site</button>
+</form>
+</section>
+<section class="panel">
+<h2>Find Sites</h2>
+<form class="search" method="get"><input name="q" value="{{q}}" placeholder="Site, city or customer"><button>Search</button><a href="{{url_for('sites')}}">Clear</a></form>
+<div class="tablewrap"><table><tr><th>ID</th><th>Site</th><th>Customer</th><th>City</th><th>Status</th><th>Actions</th></tr>
+{% for r in rows %}<tr><td>{{r.site_id}}</td><td>{{r.site_name}}</td><td>{{r.customer_name}}</td><td>{{r.city}}</td><td><span class="badge">{{r.site_status}}</span></td><td class="actions"><a href="{{url_for('edit_site',site_id=r.site_id)}}">Edit</a><form method="post" action="{{url_for('delete_site',site_id=r.site_id)}}" onsubmit="return confirm('Delete this site?')"><button class="dangerlink">Delete</button></form></td></tr>{% endfor %}
+</table></div>
+</section>
+</div>
+{% endblock %}

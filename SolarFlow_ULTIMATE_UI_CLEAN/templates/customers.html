@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% block title %}Customers{% endblock %}{% block heading %}Customer Management{% endblock %}
+{% block content %}
+<div class="grid2">
+<section class="panel">
+<h2>Register Customer</h2><p class="form-note">Existing customers are reused through their records. Duplicate phone/email entries are blocked.</p>
+<form method="post">
+<label>Name<input name="customer_name" required maxlength="100"></label>
+<label>Phone<input name="phone" required pattern="[0-9]{10,15}"></label>
+<label>Email<input name="email" type="email"></label>
+<label>Address<textarea name="address"></textarea></label>
+<button class="primary">Create Customer</button>
+</form>
+</section>
+<section class="panel">
+<h2>Find Customers</h2>
+<form class="search" method="get"><input name="q" value="{{q}}" placeholder="Name, phone or email"><button>Search</button><a href="{{url_for('customers')}}">Clear</a></form>
+<div class="tablewrap"><table><tr><th>ID</th><th>Name</th><th>Phone</th><th>Email</th><th>Actions</th></tr>
+{% for r in rows %}<tr><td>{{r.customer_id}}</td><td>{{r.customer_name}}</td><td>{{r.phone}}</td><td>{{r.email or '—'}}</td><td class="actions"><a href="{{url_for('edit_customer',customer_id=r.customer_id)}}">Edit</a><form method="post" action="{{url_for('delete_customer',customer_id=r.customer_id)}}" onsubmit="return confirm('Delete this customer?')"><button class="dangerlink">Delete</button></form></td></tr>{% endfor %}
+</table></div>
+</section>
+</div>
+{% endblock %}

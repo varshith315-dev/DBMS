@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Designs{% endblock %}
+{% block heading %}Design Management{% endblock %}
+{% block content %}
+<div class="design-page">
+<section class="panel design-form-panel">
+<h2>Create Design</h2>
+<form method="post">
+<label>Approved Survey<select name="survey_id" id="surveySelect" required><option value="">Select approved survey</option>{% for s in surveys %}<option value="{{s.survey_id}}" data-site="{{s.site_name}}" data-customer="{{s.customer_name}}" data-capacity="{{s.recommended_capacity_kw}}">Survey #{{s.survey_id}} — {{s.site_name}} — {{s.customer_name}} ({{s.recommended_capacity_kw}} kW)</option>{% endfor %}</select></label>
+<div class="relationship-box" id="designRelationship" hidden>
+  <div><span>Site</span><strong id="designSite">—</strong></div>
+  <div><span>Customer</span><strong id="designCustomer">—</strong></div>
+  <div><span>Survey Capacity</span><strong id="designSurveyCapacity">—</strong></div>
+</div>
+<label>Design Date<input name="design_date" type="date" required></label>
+<label>System Capacity (kW)<input name="system_capacity_kw" type="number" step="0.01" min="0.01" required></label>
+<label>Panel Count<input name="panel_count" type="number" step="1" min="1" required></label>
+<label>Inverter Capacity (kW)<input name="inverter_capacity_kw" type="number" step="0.01" min="0.01" required></label>
+<label>Estimated Cost<input name="estimated_cost" type="number" step="0.01" min="0" required></label>
+<label>Remarks<textarea name="remarks" placeholder="Design notes and recommendations"></textarea></label>
+<button class="primary">Create Design</button>
+</form>
+</section>
+
+<section class="panel design-list-panel">
+<h2>Find Designs</h2>
+<form class="search" method="get"><input name="q" value="{{q}}" placeholder="Site, customer or status"><button>Search</button><a href="{{url_for('designs')}}">Clear</a></form>
+<div class="design-table-wrap"><table class="design-table">
+<thead><tr><th>ID</th><th>Survey</th><th>Site</th><th>Customer</th><th>Date</th><th>Capacity</th><th>Panels</th><th>Inverter</th><th>Cost</th><th>Status</th><th>Actions</th></tr></thead>
+<tbody>
+{% for r in rows %}
+<tr>
+<td>{{r.design_id}}</td><td>#{{r.survey_id}}</td><td>{{r.site_name}}</td><td>{{r.customer_name}}</td><td>{{r.design_date.strftime('%d-%m-%Y') if r.design_date else ''}}</td><td>{{r.system_capacity_kw}} kW</td><td>{{r.panel_count}}</td><td>{{r.inverter_capacity_kw}} kW</td><td>{{r.estimated_cost}}</td><td><span class="badge">{{r.design_status}}</span></td>
+<td class="actions">{% if r.design_status == 'DRAFT' %}<form method="post" action="{{url_for('approve_design', design_id=r.design_id)}}"><button class="primary smallbtn">Approve</button></form><form method="post" action="{{url_for('reject_design', design_id=r.design_id)}}" onsubmit="return confirm('Reject this design?')"><button class="dangerlink">Reject</button></form>{% else %}<span class="muted">Processed</span>{% endif %}</td>
+</tr>
+{% else %}<tr><td colspan="11" class="empty">No designs found.</td></tr>{% endfor %}
+</tbody></table></div>
+</section>
+</div>
+<script>
+(function(){
+  const surveySelect=document.getElementById('surveySelect');
+  const relationship=document.getElementById('designRelationship');
+  const siteEl=document.getElementById('designSite');
+  const customerEl=document.getElementById('designCustomer');
+  const capacityEl=document.getElementById('designSurveyCapacity');
+  function sync(){
+    const option=surveySelect && surveySelect.selectedOptions[0];
+    if(!option || !option.value){ relationship.hidden=true; return; }
+    siteEl.textContent=option.dataset.site || '—';
+    customerEl.textContent=option.dataset.customer || '—';
+    capacityEl.textContent=(option.dataset.capacity || '—') + (option.dataset.capacity ? ' kW' : '');
+    relationship.hidden=false;
+  }
+  surveySelect && surveySelect.addEventListener('change',sync);
+  sync();
+})();
+</script>
+{% endblock %}

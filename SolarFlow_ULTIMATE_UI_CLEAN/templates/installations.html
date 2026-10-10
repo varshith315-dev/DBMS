@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Installations{% endblock %}
+{% block heading %}Installation Management{% endblock %}
+{% block content %}
+<div class="installation-page">
+<section class="panel installation-form-panel">
+<h2>Schedule Installation</h2>
+<p class="form-note">Only APPROVED designs linked to APPROVED surveys can be scheduled. Rejected or draft designs are shown for clarity but cannot be selected.</p>
+<form method="post">
+<label>Approved Design
+<select name="design_id" id="installationDesignSelect" required>
+<option value="">Select approved design</option>
+{% for d in designs %}
+{% set eligible = (d.design_status == 'APPROVED' and d.survey_status == 'APPROVED') %}
+<option value="{{d.design_id}}" data-site="{{d.site_name}}" data-customer="{{d.customer_name}}" data-capacity="{{d.system_capacity_kw}}" {% if not eligible %}disabled{% endif %}>Design #{{d.design_id}} — Survey #{{d.survey_id}} — {{d.site_name}} — {{d.customer_name}} ({{d.system_capacity_kw}} kW) — {{d.design_status}}{% if d.survey_status != 'APPROVED' %} / SURVEY {{d.survey_status}}{% endif %}</option>
+{% endfor %}
+</select></label>
+<div class="relationship-box" id="installationRelationship" hidden>
+  <div><span>Site</span><strong id="installationSite">—</strong></div>
+  <div><span>Customer</span><strong id="installationCustomer">—</strong></div>
+  <div><span>Design Capacity</span><strong id="installationDesignCapacity">—</strong></div>
+</div>
+<label>Scheduled Date<input name="scheduled_date" type="date" required></label>
+<label>Total Capacity (kW)<input name="total_capacity_kw" id="installationCapacity" type="number" step="0.01" min="0.01" required></label>
+<label>Installation Cost<input name="installation_cost" type="number" step="0.01" min="0" required></label>
+<button class="primary">Schedule Installation</button>
+</form>
+</section>
+
+<section class="panel installation-list-panel">
+<h2>Find Installations</h2>
+<form class="search" method="get"><input name="q" value="{{q}}" placeholder="Site, customer or status"><button>Search</button><a href="{{url_for('installations')}}">Clear</a></form>
+<div class="installation-table-wrap"><table class="installation-table">
+<thead><tr><th>ID</th><th>Design</th><th>Site</th><th>Customer</th><th>Scheduled</th><th>Capacity</th><th>Cost</th><th>Status</th><th>Actions</th></tr></thead>
+<tbody>
+{% for r in rows %}
+<tr>
+<td>{{r.installation_id}}</td><td>#{{r.design_id}}</td><td>{{r.site_name}}</td><td>{{r.customer_name}}</td><td>{{r.scheduled_date.strftime('%d-%m-%Y') if r.scheduled_date else ''}}</td><td>{{r.total_capacity_kw}} kW</td><td>{{r.installation_cost}}</td><td><span class="badge">{{r.installation_status}}</span></td>
+<td class="actions">
+{% if r.installation_status == 'SCHEDULED' %}
+<form method="post" action="{{url_for('change_installation_status', installation_id=r.installation_id, status='IN_PROGRESS')}}"><button class="primary smallbtn">Start</button></form>
+<form method="post" action="{{url_for('change_installation_status', installation_id=r.installation_id, status='CANCELLED')}}" onsubmit="return confirm('Cancel this installation?')"><button class="dangerlink">Cancel</button></form>
+{% elif r.installation_status == 'IN_PROGRESS' %}
+<form method="post" action="{{url_for('change_installation_status', installation_id=r.installation_id, status='COMPLETED')}}"><button class="primary smallbtn">Complete</button></form>
+<form method="post" action="{{url_for('change_installation_status', installation_id=r.installation_id, status='CANCELLED')}}" onsubmit="return confirm('Cancel this installation?')"><button class="dangerlink">Cancel</button></form>
+{% else %}<span class="muted">Processed</span>{% endif %}
+</td>
+</tr>
+{% else %}<tr><td colspan="9" class="empty">No installations found.</td></tr>{% endfor %}
+</tbody></table></div>
+</section>
+</div>
+<script>
+(function(){
+  const select=document.getElementById('installationDesignSelect');
+  const box=document.getElementById('installationRelationship');
+  const site=document.getElementById('installationSite');
+  const customer=document.getElementById('installationCustomer');
+  const capacity=document.getElementById('installationDesignCapacity');
+  const input=document.getElementById('installationCapacity');
+  function sync(){
+    const o=select && select.selectedOptions[0];
+    if(!o || !o.value){ box.hidden=true; return; }
+    site.textContent=o.dataset.site || '—';
+    customer.textContent=o.dataset.customer || '—';
+    capacity.textContent=(o.dataset.capacity || '—') + (o.dataset.capacity ? ' kW' : '');
+    if(input && o.dataset.capacity) input.value=o.dataset.capacity;
+    box.hidden=false;
+  }
+  select && select.addEventListener('change',sync);
+  sync();
+})();
+</script>
+{% endblock %}

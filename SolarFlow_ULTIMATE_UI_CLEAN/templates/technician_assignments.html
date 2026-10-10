@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Technician Assignments{% endblock %}
+{% block heading %}Technician Assignment{% endblock %}
+{% block content %}
+<div class="equipment-page assignment-page">
+<section class="panel"><h2>Assign Technician</h2><p class="form-note">Select existing records. Only ACTIVE technicians can be assigned, and overlapping assignments are blocked.</p>
+<form method="post">
+<label>Installation<select name="installation_id" required><option value="">Select installation</option>{% for i in installations %}<option value="{{i.installation_id}}">#{{i.installation_id}} — {{i.site_name}} — {{i.customer_name}} ({{i.installation_status}})</option>{% endfor %}</select></label>
+<label>Technician<select name="technician_id" required><option value="">Select technician</option>{% for t in technicians %}<option value="{{t.technician_id}}" {% if t.status != 'ACTIVE' %}disabled{% endif %}>#{{t.technician_id}} — {{t.technician_name}} — {{t.specialization or 'General'}} ({{t.status}})</option>{% endfor %}</select></label>
+<label>Start Date &amp; Time<input name="start_datetime" type="datetime-local" required></label>
+<label>End Date &amp; Time<input name="end_datetime" type="datetime-local" required></label>
+<button class="primary">Assign Technician</button></form></section>
+<section class="panel"><h2>Technician Directory</h2><div class="equipment-table-wrap"><table class="equipment-table"><thead><tr><th>ID</th><th>Technician</th><th>Phone</th><th>Email</th><th>Specialization</th><th>Status</th></tr></thead><tbody>{% for t in technicians %}<tr><td>{{t.technician_id}}</td><td><strong>{{t.technician_name}}</strong></td><td>{{t.phone}}</td><td>{{t.email}}</td><td>{{t.specialization or '—'}}</td><td><span class="badge">{{t.status}}</span></td></tr>{% else %}<tr><td colspan="6" class="empty">No technicians found.</td></tr>{% endfor %}</tbody></table></div></section>
+</div>
+<section class="panel"><h2>Assignment History</h2><div class="equipment-table-wrap"><table class="equipment-table"><thead><tr><th>ID</th><th>Installation</th><th>Site</th><th>Customer</th><th>Technician</th><th>Start</th><th>End</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+{% for a in assignments %}<tr><td>{{a.assignment_id}}</td><td>#{{a.installation_id}}</td><td>{{a.site_name}}</td><td>{{a.customer_name}}</td><td><strong>{{a.technician_name}}</strong></td><td>{{a.start_datetime.strftime('%d-%b-%Y %H:%M') if a.start_datetime else '—'}}</td><td>{{a.end_datetime.strftime('%d-%b-%Y %H:%M') if a.end_datetime else '—'}}</td><td><span class="badge">{{a.status}}</span></td><td class="actions">{% if a.status == 'ASSIGNED' %}<form method="post" action="{{url_for('technician_assignment_status', assignment_id=a.assignment_id, status='COMPLETED')}}"><button class="secondary">Complete</button></form><form method="post" action="{{url_for('technician_assignment_status', assignment_id=a.assignment_id, status='CANCELLED')}}"><button class="secondary">Cancel</button></form>{% else %}—{% endif %}</td></tr>{% else %}<tr><td colspan="9" class="empty">No technician assignments found.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}

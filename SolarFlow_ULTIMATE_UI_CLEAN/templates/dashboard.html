@@ -1,0 +1,41 @@
+{% extends "base.html" %}{% block title %}SolarFlow Command Center{% endblock %}{% block heading %}Command Center{% endblock %}
+{% block content %}
+<section class="hero-dashboard">
+  <div class="energy-hero">
+    <div class="hero-kicker">☀ CLEAN ENERGY OPERATIONS</div>
+    <h2>Turn every solar installation into a visible, measurable workflow.</h2>
+    <p>Track customers, sites, surveys, designs, field teams, equipment, service, generation and revenue from one operational command center.</p>
+    <div class="sun-metric"><strong>{{counts.sites}} sites</strong><span>connected to SolarFlow</span></div>
+  </div>
+  <div class="quick-panel">
+    <div><div class="hero-kicker">QUICK ACTIONS</div><h3>Move the workflow forward</h3></div>
+    <div class="quick-grid">
+      <a class="quick-link" href="{{url_for('customers')}}"><b>+</b>Customer</a>
+      <a class="quick-link" href="{{url_for('sites')}}"><b>+</b>Site</a>
+      <a class="quick-link" href="{{url_for('surveys')}}"><b>+</b>Survey</a>
+      <a class="quick-link" href="{{url_for('installations')}}"><b>+</b>Installation</a>
+      <a class="quick-link" href="{{url_for('generation')}}"><b>⚡</b>Generation</a>
+      <a class="quick-link" href="{{url_for('reports')}}"><b>↗</b>Reports</a>
+    </div>
+  </div>
+</section>
+<div class="cards">
+{% for key,label in [('customers','Customers'),('sites','Sites'),('surveys','Surveys'),('installations','Installations'),('technicians','Technicians'),('service_requests','Open Service Requests')] %}
+<div class="card"><span>{{label}}</span><strong>{{counts[key]}}</strong></div>{% endfor %}
+</div>
+<section class="dash-grid">
+  <div class="status-card table-panel">
+    <div class="section-head"><div><h2>Installation pipeline</h2><div class="mini-note">Latest scheduled field activity</div></div><a class="section-link" href="{{url_for('installations')}}">VIEW ALL →</a></div>
+    {% if recent %}<div class="tablewrap"><table><tr><th>ID</th><th>Customer</th><th>Site</th><th>Scheduled</th><th>Status</th></tr>{% for r in recent %}<tr><td>#{{r.installation_id}}</td><td>{{r.customer_name}}</td><td>{{r.site_name}}</td><td>{{r.scheduled_date}}</td><td><span class="badge">{{r.installation_status}}</span></td></tr>{% endfor %}</table></div>{% else %}<div class="empty">No installations recorded yet.</div>{% endif %}
+  </div>
+  <div class="status-card"><div class="section-head"><div><h2>Operations pulse</h2><div class="mini-note">Current workflow footprint</div></div></div>
+    <div class="flow-list">
+      <div class="flow-item"><div class="flow-icon">01</div><div><strong>Customers</strong><span>Customer master records</span></div><b>{{counts.customers}}</b></div>
+      <div class="flow-item"><div class="flow-icon">02</div><div><strong>Sites</strong><span>Registered project locations</span></div><b>{{counts.sites}}</b></div>
+      <div class="flow-item"><div class="flow-icon">03</div><div><strong>Field installations</strong><span>Scheduled / active / complete</span></div><b>{{counts.installations}}</b></div>
+      <div class="flow-item"><div class="flow-icon">04</div><div><strong>Service queue</strong><span>Open maintenance requests</span></div><b>{{counts.service_requests}}</b></div>
+    </div>
+    <div style="margin-top:16px"><div class="mini-note">Workflow visibility</div><div class="progress-track"><i></i></div></div>
+  </div>
+</section>
+{% endblock %}

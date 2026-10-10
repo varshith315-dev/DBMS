@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Equipment{% endblock %}
+{% block heading %}Equipment Management{% endblock %}
+{% block content %}
+<div class="equipment-page">
+<section class="panel"><h2>Register Equipment Unit</h2><p class="form-note">Select an existing equipment model. Each physical unit has a unique serial number.</p>
+<form method="post"><input type="hidden" name="action" value="register_unit">
+<label>Equipment Model<select name="model_id" required><option value="">Select equipment model</option>{% for m in models %}<option value="{{m.model_id}}">#{{m.model_id}} — {{m.manufacturer}} {{m.model_name}} — {{m.equipment_type}}{% if m.rated_capacity_kw %} — {{m.rated_capacity_kw}} kW{% endif %}</option>{% endfor %}</select></label>
+<label>Serial Number<input name="serial_number" required placeholder="e.g. INV-2026-001"></label><label>Purchase Date<input name="purchase_date" type="date"></label>
+<label>Initial Status<select name="equipment_status"><option>AVAILABLE</option><option>FAULTY</option><option>RETIRED</option></select></label><button class="primary">Register Unit</button></form></section>
+<section class="panel"><h2>Assign Equipment to Installation</h2><p class="form-note">Only AVAILABLE units can be assigned. A unit cannot be assigned twice to the same installation.</p>
+<form method="post"><input type="hidden" name="action" value="assign_unit">
+<label>Installation<select name="installation_id" required><option value="">Select installation</option>{% for i in installations %}<option value="{{i.installation_id}}">#{{i.installation_id}} — {{i.site_name}} — {{i.customer_name}} ({{i.installation_status}})</option>{% endfor %}</select></label>
+<label>Available Equipment Unit<select name="equipment_id" required><option value="">Select available unit</option>{% for e in available_units %}<option value="{{e.equipment_id}}">#{{e.equipment_id}} — {{e.serial_number}} — {{e.manufacturer}} {{e.model_name}}{% if e.rated_capacity_kw %} — {{e.rated_capacity_kw}} kW{% endif %}</option>{% endfor %}</select></label>
+<label>Quantity<input name="quantity" type="number" min="1" step="1" value="1" required></label><button class="primary">Assign Equipment</button></form></section>
+</div>
+<section class="panel"><h2>Equipment Inventory</h2><form class="search" method="get"><input name="q" value="{{q}}" placeholder="Serial, manufacturer, model, type or status"><button>Search</button><a href="{{url_for('equipment')}}">Clear</a></form>
+<div class="equipment-table-wrap"><table class="equipment-table"><thead><tr><th>ID</th><th>Serial</th><th>Type</th><th>Manufacturer</th><th>Model</th><th>Capacity</th><th>Warranty</th><th>Status</th></tr></thead><tbody>
+{% for e in units %}<tr><td>{{e.equipment_id}}</td><td><strong>{{e.serial_number}}</strong></td><td>{{e.equipment_type}}</td><td>{{e.manufacturer}}</td><td>{{e.model_name}}</td><td>{{e.rated_capacity_kw}} kW</td><td>{{e.warranty_months}} months</td><td><span class="badge">{{e.equipment_status}}</span></td></tr>{% else %}<tr><td colspan="8" class="empty">No equipment units found.</td></tr>{% endfor %}
+</tbody></table></div></section>
+<section class="panel"><h2>Installation Equipment</h2><div class="equipment-table-wrap"><table class="equipment-table"><thead><tr><th>Installation</th><th>Site</th><th>Customer</th><th>Equipment</th><th>Type</th><th>Model</th><th>Quantity</th></tr></thead><tbody>
+{% for a in assignments %}<tr><td>#{{a.installation_id}}</td><td>{{a.site_name}}</td><td>{{a.customer_name}}</td><td>{{a.serial_number}}</td><td>{{a.equipment_type}}</td><td>{{a.manufacturer}} {{a.model_name}}</td><td>{{a.quantity}}</td></tr>{% else %}<tr><td colspan="7" class="empty">No equipment assignments found.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}

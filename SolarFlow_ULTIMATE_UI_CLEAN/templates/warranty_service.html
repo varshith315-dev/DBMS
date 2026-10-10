@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Warranty & Service{% endblock %}
+{% block heading %}Warranty & Service Management{% endblock %}
+{% block content %}
+<div class="grid-2">
+<section class="card">
+<h2>Register Warranty</h2>
+<p class="muted">Select an existing equipment unit without a warranty. Equipment with an existing warranty is not available for registration again.</p>
+<form method="post">
+<input type="hidden" name="action" value="warranty">
+<label>Equipment Unit</label>
+<select name="equipment_id" required><option value="">Select equipment</option>{% for e in warranty_equipment %}<option value="{{e.equipment_id}}">#{{e.equipment_id}} — {{e.serial_number}} — {{e.manufacturer}} {{e.model_name}}</option>{% endfor %}</select>
+<label>Warranty Start</label><input type="date" name="warranty_start" required>
+<label>Warranty End</label><input type="date" name="warranty_end" required>
+<button type="submit">Register Warranty</button>
+</form>
+</section>
+<section class="card">
+<h2>Create Service Request</h2>
+<p class="muted">Select the existing site; the customer relationship is already stored in the database.</p>
+<form method="post">
+<input type="hidden" name="action" value="service_request">
+<label>Site</label>
+<select name="site_id" required>{% for s in site_customers %}<option value="{{s.site_id}}">#{{s.site_id}} — {{s.site_name}} — {{s.customer_name}}</option>{% endfor %}</select>
+<label>Equipment <span class="required">*</span></label>
+<select name="equipment_id" id="service-equipment" required><option value="">Select equipment</option>{% for e in available_equipment %}<option value="{{e.equipment_id}}" data-site-id="{{e.site_id or ''}}">#{{e.equipment_id}} — {{e.serial_number}} — {{e.manufacturer}} {{e.model_name}}</option>{% endfor %}</select>
+<small id="equipment-help" class="muted">Select a site first. Only equipment assigned to that site will be available.</small>
+<label>Request Date</label><input type="date" name="request_date" required>
+<label>Priority</label><select name="priority"><option>LOW</option><option selected>MEDIUM</option><option>HIGH</option><option>CRITICAL</option></select>
+<label>Issue Description</label><textarea name="issue_description" maxlength="500" required placeholder="Describe the maintenance issue"></textarea>
+<button type="submit">Create Service Request</button>
+</form>
+</section>
+</div>
+
+<section class="card"><h2>Warranty Records</h2><div class="table-wrap"><table><thead><tr><th>ID</th><th>Equipment</th><th>Model</th><th>Start</th><th>End</th><th>Status</th></tr></thead><tbody>
+{% for w in warranties %}<tr><td>{{w.warranty_id}}</td><td>{{w.serial_number}}</td><td>{{w.manufacturer}} {{w.model_name}}</td><td>{{w.warranty_start.strftime('%d-%m-%Y')}}</td><td>{{w.warranty_end.strftime('%d-%m-%Y')}}</td><td><span class="badge">{{w.warranty_status}}</span></td></tr>{% else %}<tr><td colspan="6">No warranty records yet.</td></tr>{% endfor %}
+</tbody></table></div></section>
+
+<section class="card"><h2>Service Requests</h2><div class="table-wrap"><table><thead><tr><th>ID</th><th>Site</th><th>Customer</th><th>Equipment</th><th>Date</th><th>Priority</th><th>Issue</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+{% for r in requests %}<tr><td>{{r.service_request_id}}</td><td>{{r.site_name}}</td><td>{{r.customer_name}}</td><td>{{r.serial_number or '—'}}</td><td>{{r.request_date.strftime('%d-%m-%Y')}}</td><td>{{r.priority}}</td><td>{{r.issue_description}}</td><td><span class="badge">{{r.request_status}}</span></td><td>{% if r.request_status in ['OPEN','ASSIGNED'] %}<form class="inline" method="post"><input type="hidden" name="action" value="request_status"><input type="hidden" name="service_request_id" value="{{r.service_request_id}}"><input type="hidden" name="status" value="IN_PROGRESS"><button type="submit">Start</button></form>{% endif %}{% if r.request_status == 'IN_PROGRESS' %}<form class="inline" method="post"><input type="hidden" name="action" value="request_status"><input type="hidden" name="service_request_id" value="{{r.service_request_id}}"><input type="hidden" name="status" value="RESOLVED"><button type="submit">Resolve</button></form>{% endif %}{% if r.request_status in ['OPEN','ASSIGNED','IN_PROGRESS'] %}<form class="inline" method="post"><input type="hidden" name="action" value="request_status"><input type="hidden" name="service_request_id" value="{{r.service_request_id}}"><input type="hidden" name="status" value="CANCELLED"><button type="submit">Cancel</button></form>{% endif %}</td></tr>{% else %}<tr><td colspan="9">No service requests yet.</td></tr>{% endfor %}
+</tbody></table></div></section>
+
+<section class="card"><h2>Schedule Service Visit</h2>
+<form method="post" class="form-grid"><input type="hidden" name="action" value="visit">
+<label>Service Request<select name="service_request_id" required><option value="">Select request</option>{% for r in open_requests %}<option value="{{r.service_request_id}}">#{{r.service_request_id}} — {{r.issue_description[:60]}} — {{r.request_status}}</option>{% endfor %}</select></label>
+<label>Technician<select name="technician_id" required><option value="">Select active technician</option>{% for t in technicians %}<option value="{{t.technician_id}}">#{{t.technician_id}} — {{t.technician_name}}</option>{% endfor %}</select></label>
+<label>Visit Date<input type="date" name="visit_date" required></label>
+<button type="submit">Schedule Visit</button></form></section>
+
+<section class="card"><h2>Service Visits</h2><div class="table-wrap"><table><thead><tr><th>ID</th><th>Request</th><th>Site</th><th>Technician</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+{% for v in visits %}<tr><td>{{v.visit_id}}</td><td>#{{v.service_request_id}} — {{v.issue_description}}</td><td>{{v.site_name}}</td><td>{{v.technician_name}}</td><td>{{v.visit_date.strftime('%d-%m-%Y')}}</td><td><span class="badge">{{v.visit_status}}</span></td><td>{% if v.visit_status == 'SCHEDULED' %}<form class="inline" method="post"><input type="hidden" name="action" value="visit_status"><input type="hidden" name="visit_id" value="{{v.visit_id}}"><input type="hidden" name="status" value="COMPLETED"><button type="submit">Complete</button></form><form class="inline" method="post"><input type="hidden" name="action" value="visit_status"><input type="hidden" name="visit_id" value="{{v.visit_id}}"><input type="hidden" name="status" value="CANCELLED"><button type="submit">Cancel</button></form>{% else %}—{% endif %}</td></tr>{% else %}<tr><td colspan="7">No service visits yet.</td></tr>{% endfor %}
+</tbody></table></div></section>
+
+<script>
+(function () {
+  const siteSelect = document.querySelector('select[name="site_id"]');
+  const equipmentSelect = document.getElementById('service-equipment');
+  const help = document.getElementById('equipment-help');
+  if (!siteSelect || !equipmentSelect) return;
+
+  const allOptions = Array.from(equipmentSelect.options).slice(1).map(opt => opt.cloneNode(true));
+
+  function filterEquipment() {
+    const siteId = siteSelect.value;
+    const current = equipmentSelect.value;
+    equipmentSelect.innerHTML = '';
+    const empty = document.createElement('option');
+    empty.value = '';
+    empty.textContent = siteId ? 'Select equipment' : 'Select site first';
+    equipmentSelect.appendChild(empty);
+
+    let count = 0;
+    allOptions.forEach(opt => {
+      if (String(opt.dataset.siteId) === String(siteId)) {
+        equipmentSelect.appendChild(opt);
+        count++;
+      }
+    });
+
+    if (count === 0 && siteId) {
+      help.textContent = 'No equipment is assigned to this site. Assign equipment before creating a service request.';
+    } else {
+      help.textContent = 'Only equipment assigned to the selected site is available.';
+    }
+
+    if (allOptions.some(opt => opt.value === current && String(opt.dataset.siteId) === String(siteId))) {
+      equipmentSelect.value = current;
+    }
+  }
+
+  siteSelect.addEventListener('change', filterEquipment);
+  filterEquipment();
+})();
+</script>
+{% endblock %}

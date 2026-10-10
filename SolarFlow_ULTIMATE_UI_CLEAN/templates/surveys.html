@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Surveys{% endblock %}
+{% block heading %}Survey Management{% endblock %}
+{% block content %}
+<div class="grid2">
+<section class="panel">
+<h2>Create Survey</h2>
+<form method="post">
+<label>Site<select name="site_id" id="siteSelect" required><option value="">Select site</option>{% for s in sites %}<option value="{{s.site_id}}" data-customer="{{s.customer_name}}">{{s.site_name}} — {{s.customer_name}} (#{{s.site_id}})</option>{% endfor %}</select></label>
+<div class="relationship-box" id="surveyRelationship" hidden>
+  <div><span>Customer</span><strong id="surveyCustomer">—</strong></div>
+</div>
+<label>Survey Date<input name="survey_date" type="date" required></label>
+<label>Technician Name<input name="technician_name" required></label>
+<label>Roof Condition<input name="roof_condition" placeholder="Good / Fair / Poor" required></label>
+<label>Sunlight Condition<input name="sunlight_condition" placeholder="Excellent / Good / Moderate / Poor" required></label>
+<label>Recommended Capacity (kW)<input name="recommended_capacity_kw" type="number" step="0.01" min="0.01" required></label>
+<label>Remarks<textarea name="remarks" placeholder="Survey observations and recommendations"></textarea></label>
+<button class="primary">Create Survey</button>
+</form>
+</section>
+<section class="panel">
+<h2>Find Surveys</h2>
+<form class="search" method="get"><input name="q" value="{{q}}" placeholder="Site, customer, technician or status"><button>Search</button><a href="{{url_for('surveys')}}">Clear</a></form>
+<div class="tablewrap"><table class="compact-table">
+<tr><th>ID</th><th>Site</th><th>Customer</th><th>Date</th><th>Technician</th><th>Capacity</th><th>Status</th><th>Actions</th></tr>
+{% for r in rows %}
+<tr>
+<td>{{r.survey_id}}</td><td>{{r.site_name}}</td><td>{{r.customer_name}}</td><td>{{r.survey_date.strftime('%d-%m-%Y') if r.survey_date else ''}}</td><td>{{r.technician_name}}</td><td>{{r.recommended_capacity_kw}} kW</td><td><span class="badge">{{r.survey_status}}</span></td>
+<td class="actions">
+{% if r.survey_status == 'PENDING' %}
+<form method="post" action="{{url_for('approve_survey', survey_id=r.survey_id)}}"><button class="primary smallbtn">Approve</button></form>
+<form method="post" action="{{url_for('reject_survey', survey_id=r.survey_id)}}" onsubmit="return confirm('Reject this survey?')"><button class="dangerlink">Reject</button></form>
+{% else %}<span class="muted">Processed</span>{% endif %}
+</td>
+</tr>
+{% else %}<tr><td colspan="8" class="empty">No surveys found.</td></tr>{% endfor %}
+</table></div>
+</section>
+</div>
+<script>
+(function(){
+  const siteSelect=document.getElementById('siteSelect');
+  const relationship=document.getElementById('surveyRelationship');
+  const customer=document.getElementById('surveyCustomer');
+  function sync(){
+    const option=siteSelect && siteSelect.selectedOptions[0];
+    if(!option || !option.value){ relationship.hidden=true; return; }
+    customer.textContent=option.dataset.customer || '—';
+    relationship.hidden=false;
+  }
+  siteSelect && siteSelect.addEventListener('change',sync);
+  sync();
+})();
+</script>
+{% endblock %}

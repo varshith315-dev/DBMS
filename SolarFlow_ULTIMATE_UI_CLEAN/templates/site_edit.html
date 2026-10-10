@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block title %}Edit Site{% endblock %}{% block heading %}Edit Site #{{row.site_id}}{% endblock %}
+{% block content %}
+<section class="panel narrow"><form method="post">
+<label>Customer<select name="customer_id" required>{% for c in customers %}<option value="{{c.customer_id}}" {% if c.customer_id == row.customer_id %}selected{% endif %}>{{c.customer_name}} (#{{c.customer_id}})</option>{% endfor %}</select></label>
+<label>Site Name<input name="site_name" value="{{row.site_name or ''}}" required></label>
+<label>Site Address<input name="site_address" value="{{row.site_address or ''}}" required></label>
+<label>City<input name="city" value="{{row.city or ''}}" required></label>
+<label>Pincode<input name="pincode" value="{{row.pincode or ''}}"></label>
+<label>Roof Area (sq m)<input name="roof_area_sq_m" type="number" step="0.01" min="0.01" value="{{row.roof_area_sq_m or ''}}"></label>
+<div class="buttons"><button class="primary">Save Changes</button><a class="secondary" href="{{url_for('sites')}}">Cancel</a></div>
+</form></section>
+{% endblock %}
