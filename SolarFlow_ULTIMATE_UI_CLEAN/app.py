@@ -8,7 +8,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SOLARFLOW_SECRET", "solarflow-development")
 
 DB_USER = os.getenv("SOLAR_DB_USER", "SOLAR_ADMIN")
-DB_PASSWORD = os.getenv("SOLAR_DB_PASSWORD", "Solar@12345")
+DB_PASSWORD = os.getenv("SOLAR_DB_PASSWORD")
 DB_DSN = os.getenv("SOLAR_DB_DSN", "localhost:1521/ORCLPDB")
 
 def get_conn():
@@ -1202,5 +1202,15 @@ def reports():
     revenue_report=fetch_all("SELECT c.customer_name,COUNT(i.invoice_id) invoice_count,NVL(SUM(i.invoice_amount),0) invoiced_amount,NVL(SUM((SELECT SUM(p.amount) FROM payments p WHERE p.invoice_id=i.invoice_id AND p.payment_status='SUCCESS')),0) paid_amount FROM customers c LEFT JOIN invoices i ON i.customer_id=c.customer_id GROUP BY c.customer_name ORDER BY invoiced_amount DESC")
     return render_template('reports.html', installation_report=installation_report,warranty_report=warranty_report,maintenance_report=maintenance_report,technician_report=technician_report,generation_report=generation_report,revenue_report=revenue_report)
 
+
+
+import os
+
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000)),
+        debug=False
+    )
+
+
