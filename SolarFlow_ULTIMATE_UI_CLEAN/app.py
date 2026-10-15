@@ -167,66 +167,44 @@ def site_data(form):
         "roof_area_sq_m": roof,
     }, errors
 
+
 @app.route("/")
 def dashboard():
-    counts = {
-        "customers": fetch_one("SELECT COUNT(*) n FROM customers")["n"],
-        "sites": fetch_one("SELECT COUNT(*) n FROM sites")["n"],
-        "surveys": fetch_one("SELECT COUNT(*) n FROM surveys")["n"],
-        "installations": fetch_one("SELECT COUNT(*) n FROM installations")["n"],
-        "technicians": fetch_one("SELECT COUNT(*) n FROM technicians")["n"],
-        "service_requests": fetch_one("SELECT COUNT(*) n FROM service_requests WHERE request_status IN ('OPEN','ASSIGNED','IN_PROGRESS')")["n"],
-    }
-    recent = fetch_all("""
-        SELECT i.installation_id, c.customer_name, s.site_name,
-               i.scheduled_date, i.installation_status
-        FROM installations i
-        JOIN sites s ON s.site_id = i.site_id
-        JOIN customers c ON c.customer_id = s.customer_id
-        ORDER BY i.scheduled_date DESC
-        FETCH FIRST 8 ROWS ONLY
-    """)
-    return render_template("dashboard.html", counts=counts, recent=recent)
+    try:
+        counts = {
+            "customers": fetch_one("SELECT COUNT(*) n FROM customers")["n"],
+            "sites": fetch_one("SELECT COUNT(*) n FROM sites")["n"],
+            "surveys": fetch_one("SELECT COUNT(*) n FROM surveys")["n"],
+            "installations": fetch_one("SELECT COUNT(*) n FROM installations")["n"],
+            "technicians": fetch_one("SELECT COUNT(*) n FROM technicians")["n"],
+            "service_requests": fetch_one(
+                "SELECT COUNT(*) n FROM service_requests "
+                "WHERE request_status IN ('OPEN','ASSIGNED','IN_PROGRESS')"
+            )["n"],
+        }
 
-@app.route("/customers", methods=["GET", "POST"])
-def customers():
-    if request.method == "POST":
-        data, errors = customer_data(request.form)
-        if not errors:
-            if fetch_one("SELECT customer_id FROM customers WHERE phone=:phone", {"phone": data["phone"]}):
-                errors.append("A customer with this phone number already exists.")
-            if data["email"] and fetch_one("SELECT customer_id FROM customers WHERE email=:email", {"email": data["email"]}):
-                errors.append("A customer with this email already exists.")
-        if errors:
-            for e in errors:
-                flash(e, "danger")
-        else:
-            try:
-                execute("""
-                    INSERT INTO customers(customer_name, phone, email, address)
-                    VALUES (:customer_name, :phone, :email, :address)
-                """, data)
-                flash("Customer created successfully.", "success")
-                return redirect(url_for("customers"))
-            except Exception as exc:
-                flash(clean_error(exc), "danger")
-
-    q = request.args.get("q", "").strip()
-    if q:
-        rows = fetch_all("""
-            SELECT customer_id, customer_name, phone, email, address, created_at
-            FROM customers
-            WHERE LOWER(customer_name) LIKE LOWER(:q)
-               OR phone LIKE :q
-               OR LOWER(NVL(email,'')) LIKE LOWER(:q)
-            ORDER BY customer_id DESC
-        """, {"q": f"%{q}%"})
-    else:
-        rows = fetch_all("""
-            SELECT customer_id, customer_name, phone, email, address, created_at
-            FROM customers ORDER BY customer_id DESC
+        recent = fetch_all("""
+            SELECT i.installation_id, c.customer_name, s.site_name,
+                   i.scheduled_date, i.installation_status
+            FROM installations i
+            JOIN sites s ON s.site_id = i.site_id
+            JOIN customers c ON c.customer_id = s.customer_id
+            ORDER BY i.scheduled_date DESC
+            FETCH FIRST 8 ROWS ONLY
         """)
-    return render_template("customers.html", rows=rows, q=q)
+
+        return render_template(
+            "dashboard.html", counts=counts, recent=recent
+        )
+
+    except Exception:
+        app.logger.exception("Dashboard database query failed")
+        return (
+            "SolarFlow is running, but its database is currently "
+            "unavailable. Please try again later.",
+            503,
+        )
+
 
 @app.route("/customers/<int:customer_id>/edit", methods=["GET", "POST"])
 def edit_customer(customer_id):
